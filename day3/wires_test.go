@@ -31,6 +31,48 @@ func TestClosestIntersection(t *testing.T) {
 	}
 }
 
+func TestDoLineSegmentsIntersect(t *testing.T) {
+	type testStruct struct {
+		input  []lineSegment
+		output bool
+	}
+	tests := []testStruct{
+		testStruct{
+			[]lineSegment{
+				lineSegment{
+					point{1, 1},
+					point{10, 1},
+				},
+				lineSegment{
+					point{1, 2},
+					point{10, 2},
+				},
+			},
+			false,
+		},
+		testStruct{
+			[]lineSegment{
+				lineSegment{
+					point{10, 1},
+					point{0, 10},
+				},
+				lineSegment{
+					point{0, 0},
+					point{10, 10},
+				},
+			},
+			true,
+		},
+	}
+
+	for i, test := range tests {
+		answer := doLineSegmentsIntersect(test.input[0], test.input[1])
+		if answer != test.output {
+			t.Errorf("Test '%v': doLineSegmentsIntersect(%v) expected '%v' got '%v'", i, test.input, test.output, answer)
+		}
+	}
+}
+
 func TestConstructLineSegmentsFromWire(t *testing.T) {
 	type testStruct struct {
 		input    string
@@ -42,6 +84,10 @@ func TestConstructLineSegmentsFromWire(t *testing.T) {
 			[]lineSegment{
 				lineSegment{
 					point{0, 0},
+					point{0, 1},
+				},
+				lineSegment{
+					point{0, 1},
 					point{3, 1},
 				},
 			},
@@ -51,24 +97,36 @@ func TestConstructLineSegmentsFromWire(t *testing.T) {
 			[]lineSegment{
 				lineSegment{
 					point{0, 0},
+					point{0, 1},
+				},
+				lineSegment{
+					point{0, 1},
 					point{-3, 1},
 				},
 			},
 		},
 		testStruct{
-			"D1,R3,",
+			"D1,R3",
 			[]lineSegment{
 				lineSegment{
 					point{0, 0},
+					point{0, -1},
+				},
+				lineSegment{
+					point{0, -1},
 					point{3, -1},
 				},
 			},
 		},
 		testStruct{
-			"D1,L3,",
+			"D1,L3",
 			[]lineSegment{
 				lineSegment{
 					point{0, 0},
+					point{0, -1},
+				},
+				lineSegment{
+					point{0, -1},
 					point{-3, -1},
 				},
 			},
@@ -78,6 +136,10 @@ func TestConstructLineSegmentsFromWire(t *testing.T) {
 			[]lineSegment{
 				lineSegment{
 					point{0, 0},
+					point{0, -1},
+				},
+				lineSegment{
+					point{0, -1},
 					point{-3, -1},
 				},
 				lineSegment{

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -26,10 +26,6 @@ type lineSegment struct {
 	pointA, pointB point
 }
 
-func (a lineSegment) findIntersection(b lineSegment) (point, error) {
-	return point{0, 0}, nil
-}
-
 func (a lineSegment) Equal(b lineSegment) bool {
 	if &a == &b {
 		return true
@@ -45,20 +41,59 @@ func (a lineSegment) Equal(b lineSegment) bool {
 func closestIntersection(wirePath string) int {
 	wires := strings.Split(wirePath, "\n")
 
-	wireASegments := constructLineSegmentsFromWire(wires[0])
-	wireBSegments := constructLineSegmentsFromWire(wires[1])
+	wireASegments := constructLineSegmentsFromWire(strings.TrimSpace(wires[0]))
+	wireBSegments := constructLineSegmentsFromWire(strings.TrimSpace(wires[1]))
 
-	fmt.Println(wireASegments, wireBSegments)
+	wireIntersections := findWireIntersectionPoints(wireASegments, wireBSegments)
 
-	return 0
-}
+	closestIntersectionDistance := math.MaxInt32 // hacky, whatever...
 
-func findWireIntersections(wireA, wireB []lineSegment) {
-	for _, segmentA := range wireA {
-		for _, segmentB := range wireB {
+	for _, intersection := range wireIntersections {
+		if intersection.x == 0 && intersection.y == 0 {
+			continue
+		}
+		manhattanDistance := abs(intersection.x) + abs(intersection.y)
 
+		if closestIntersectionDistance > manhattanDistance {
+			closestIntersectionDistance = manhattanDistance
 		}
 	}
+
+	return closestIntersectionDistance
+}
+
+func findWireIntersectionPoints(wireA, wireB []lineSegment) []point {
+	intersectionPoints := []point{}
+	for _, segmentA := range wireA {
+		for _, segmentB := range wireB {
+			if doLineSegmentsIntersect(segmentA, segmentB) {
+				intersectionPoints = append(intersectionPoints, lineLineIntersectionPoint(segmentA, segmentB))
+			}
+		}
+	}
+
+	return intersectionPoints
+}
+
+func lineLineIntersectionPoint(a, b lineSegment) point {
+	a1 := a.pointB.y - a.pointA.y
+	b1 := a.pointA.x - a.pointB.x
+	c1 := a1*a.pointA.x + b1*a.pointA.y
+
+	a2 := b.pointB.y - b.pointA.y
+	b2 := b.pointA.x - b.pointB.x
+	c2 := a2*b.pointA.x + b2*b.pointA.y
+
+	determinant := a1*b2 - a2*b1
+
+	if determinant == 0 {
+		return point{0, 0}
+	}
+
+	x := (b2*c1 - b1*c2) / determinant
+	y := (a1*c2 - a2*c1) / determinant
+
+	return point{x, y}
 }
 
 func constructLineSegmentsFromWire(wire string) []lineSegment {
@@ -71,35 +106,36 @@ func constructLineSegmentsFromWire(wire string) []lineSegment {
 		newSegment := lineSegment{}
 		newSegment.pointA = previousPoint
 
-		direction := vector[0]
-		distance, err := strconv.Atoi(vector[0:])
+		direction := string(vector[0])
+		distance, err := strconv.Atoi(string(vector[1:]))
+
 		if err != nil {
 			return []lineSegment{}
 		}
-		fmt.Printf("direction: '%v', distance: '%v'\n", direction, distance)
+
 		switch direction {
-		case 'U':
+		case "U":
 			newPoint := point{previousPoint.x, previousPoint.y + distance}
 			lineSegments = append(lineSegments, lineSegment{
 				pointA: previousPoint,
 				pointB: newPoint,
 			})
 			previousPoint = newPoint
-		case 'R':
+		case "R":
 			newPoint := point{previousPoint.x + distance, previousPoint.y}
 			lineSegments = append(lineSegments, lineSegment{
 				pointA: previousPoint,
 				pointB: newPoint,
 			})
 			previousPoint = newPoint
-		case 'D':
+		case "D":
 			newPoint := point{previousPoint.x, previousPoint.y - distance}
 			lineSegments = append(lineSegments, lineSegment{
 				pointA: previousPoint,
 				pointB: newPoint,
 			})
 			previousPoint = newPoint
-		case 'L':
+		case "L":
 			newPoint := point{previousPoint.x - distance, previousPoint.y}
 			lineSegments = append(lineSegments, lineSegment{
 				pointA: previousPoint,
@@ -110,6 +146,81 @@ func constructLineSegmentsFromWire(wire string) []lineSegment {
 	}
 
 	return lineSegments
+}
+
+func max(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a <= b {
+		return a
+	}
+	return b
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+
+	return x
+}
+
+// 0 for colinear
+// 1 for clockwise
+// 2 for counterclockwise
+func threePointOrientation(a, b, c point) int {
+	val := (b.y-a.y)*(c.x-b.x) - (b.x-a.x)*(c.y-b.y)
+
+	if val == 0 {
+		return 0
+	}
+
+	if val > 0 {
+		return 1
+	}
+
+	return 2
+}
+
+func onSegment(a, b, c point) bool {
+	if b.x <= max(a.x, c.x) && b.x >= min(a.x, c.x) && b.y <= max(a.y, c.y) && b.y >= min(a.y, c.y) {
+		return true
+	}
+	return false
+}
+
+func doLineSegmentsIntersect(a, b lineSegment) bool {
+	o1 := threePointOrientation(a.pointA, a.pointB, b.pointA)
+	o2 := threePointOrientation(a.pointA, a.pointB, b.pointB)
+	o3 := threePointOrientation(b.pointA, b.pointB, a.pointA)
+	o4 := threePointOrientation(b.pointA, b.pointB, a.pointB)
+
+	if o1 != o2 && o3 != o4 {
+		return true
+	}
+
+	if o1 == 0 && onSegment(a.pointA, a.pointB, b.pointA) {
+		return true
+	}
+
+	if o2 == 0 && onSegment(a.pointA, a.pointB, b.pointA) {
+		return true
+	}
+
+	if o3 == 0 && onSegment(a.pointB, a.pointA, b.pointB) {
+		return true
+	}
+
+	if o4 == 0 && onSegment(a.pointB, a.pointA, b.pointB) {
+		return true
+	}
+
+	return false
 }
 
 func main() {
