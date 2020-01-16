@@ -50,8 +50,3 @@ func IntCodeRunner(code []int) []int {
 
 	return code
 }
-
-func main() {
-	test := []int{1, 2, 3}
-	IntCodeRunner(test)
-}
