@@ -19,7 +19,7 @@ func searchPasswords(start, end int) int {
 func validatePassword(passwordString string) bool {
 	checkPassword := passwordString
 	if len(checkPassword) != 6 {
-		checkPassword = padPassword(checkPassword)
+		return false
 	}
 
 	hasMatchingAdjacent := false

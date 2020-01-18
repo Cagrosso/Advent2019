@@ -26,6 +26,18 @@ type lineSegment struct {
 	pointA, pointB point
 }
 
+// as the lines are always vertical/horizontal, subtracting the x or y coordinate
+func lineSegementLength(line lineSegment) int {
+	xLength := abs(line.pointA.x - line.pointB.x)
+	yLength := abs(line.pointA.y - line.pointB.y)
+
+	if xLength > 0 {
+		return xLength
+	}
+
+	return yLength
+}
+
 func (a lineSegment) Equal(b lineSegment) bool {
 	if &a == &b {
 		return true
@@ -36,6 +48,53 @@ func (a lineSegment) Equal(b lineSegment) bool {
 	}
 
 	return true
+}
+
+func lineSegmentPathLengthToIntersectionPoint(line []lineSegment, intersectionPoint point) int {
+	pathSteps := 0
+	for _, segment := range line {
+		if onSegment(segment.pointA, intersectionPoint, segment.pointB) {
+			newSegment := lineSegment{
+				segment.pointA,
+				intersectionPoint,
+			}
+			pathSteps += lineSegementLength(newSegment)
+			break
+		}
+
+		// add distance from segement point a to b to pathSteps
+		pathSteps += lineSegementLength(segment)
+	}
+
+	return pathSteps
+}
+
+func shortestPathToIntersection(wirePath string) int {
+	wires := strings.Split(wirePath, "\n")
+
+	wireASegments := constructLineSegmentsFromWire(strings.TrimSpace(wires[0]))
+	wireBSegments := constructLineSegmentsFromWire(strings.TrimSpace(wires[1]))
+
+	wireIntersections := findWireIntersectionPoints(wireASegments, wireBSegments)
+
+	closestIntersectionDistance := math.MaxInt32 // hacky, whatever...
+
+	for _, intersection := range wireIntersections {
+		if intersection.x == 0 && intersection.y == 0 {
+			continue
+		}
+
+		wireAPathLengthToIntersection := lineSegmentPathLengthToIntersectionPoint(wireASegments, intersection)
+		wireBPathLengthToIntersection := lineSegmentPathLengthToIntersectionPoint(wireBSegments, intersection)
+
+		pathDistanceToIntersection := wireAPathLengthToIntersection + wireBPathLengthToIntersection
+
+		if closestIntersectionDistance > pathDistanceToIntersection {
+			closestIntersectionDistance = pathDistanceToIntersection
+		}
+	}
+
+	return closestIntersectionDistance
 }
 
 func closestIntersection(wirePath string) int {
@@ -187,6 +246,7 @@ func threePointOrientation(a, b, c point) int {
 	return 2
 }
 
+// does b fall on segment a, c
 func onSegment(a, b, c point) bool {
 	if b.x <= max(a.x, c.x) && b.x >= min(a.x, c.x) && b.y <= max(a.y, c.y) && b.y >= min(a.y, c.y) {
 		return true

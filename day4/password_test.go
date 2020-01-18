@@ -60,22 +60,22 @@ func TestPadPassword(t *testing.T) {
 }
 
 func TestSearchPasswords(t *testing.T) {
-	type rng struct {
+	type passwordRange struct {
 		start int
 		end   int
 	}
 	type testStruct struct {
-		input  rng
+		input  passwordRange
 		output int
 	}
 
 	tests := []testStruct{
 		testStruct{
-			rng{
+			passwordRange{
 				0,
 				10,
 			},
-			10,
+			0,
 		},
 	}
 
@@ -85,4 +85,8 @@ func TestSearchPasswords(t *testing.T) {
 			t.Errorf("searchPassword(%v) expected '%v' got '%v'", test.input, test.output, result)
 		}
 	}
+}
+
+func TestRun1(t *testing.T) {
+	fmt.Println(searchPasswords(124075, 580769))
 }
