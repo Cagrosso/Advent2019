@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestValidatePassword(t *testing.T) {
+func TestValidatePasswordMethod1(t *testing.T) {
 	type testStruct struct {
 		input  string
 		output bool
@@ -39,7 +39,51 @@ func TestValidatePassword(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		result := validatePassword(test.input)
+		result := validatePasswordMethod1(test.input)
+
+		if result != test.output {
+			t.Errorf("Test %v: validatePassword(%v) expected '%v' got '%v'", i, test.input, test.output, result)
+		}
+
+		fmt.Println()
+	}
+}
+
+func TestValidatePasswordMethod2(t *testing.T) {
+	type testStruct struct {
+		input  string
+		output bool
+	}
+
+	tests := []testStruct{
+		testStruct{
+			"000000",
+			false,
+		},
+		testStruct{
+			"112345",
+			true,
+		},
+		testStruct{
+			"654322",
+			false,
+		},
+		testStruct{
+			"135799",
+			true,
+		},
+		testStruct{
+			"0",
+			false,
+		},
+		testStruct{
+			"123456",
+			false,
+		},
+	}
+
+	for i, test := range tests {
+		result := validatePasswordMethod2(test.input)
 
 		if result != test.output {
 			t.Errorf("Test %v: validatePassword(%v) expected '%v' got '%v'", i, test.input, test.output, result)
@@ -80,7 +124,7 @@ func TestSearchPasswords(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := searchPasswords(test.input.start, test.input.end)
+		result := searchPasswordsMethod1(test.input.start, test.input.end)
 		if result != test.output {
 			t.Errorf("searchPassword(%v) expected '%v' got '%v'", test.input, test.output, result)
 		}
@@ -88,5 +132,9 @@ func TestSearchPasswords(t *testing.T) {
 }
 
 func TestRun1(t *testing.T) {
-	fmt.Println(searchPasswords(124075, 580769))
+	fmt.Println(searchPasswordsMethod1(124075, 580769))
+}
+
+func TestRun2(t *testing.T) {
+	fmt.Println(searchPasswordsMethod2(124075, 580769))
 }

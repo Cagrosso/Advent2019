@@ -1,14 +1,16 @@
 package password
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 )
 
-func searchPasswords(start, end int) int {
+func searchPasswordsMethod1(start, end int) int {
 	validPasswords := 0
 
 	for i := start; i <= end; i++ {
-		if validatePassword(strconv.Itoa(i)) {
+		if validatePasswordMethod1(strconv.Itoa(i)) {
 			validPasswords++
 		}
 	}
@@ -16,37 +18,65 @@ func searchPasswords(start, end int) int {
 	return validPasswords
 }
 
-func validatePassword(passwordString string) bool {
-	checkPassword := passwordString
-	if len(checkPassword) != 6 {
+func searchPasswordsMethod2(start, end int) int {
+	validPasswords := 0
+
+	for i := start; i <= end; i++ {
+		if validatePasswordMethod2(strconv.Itoa(i)) {
+			validPasswords++
+		}
+	}
+
+	return validPasswords
+}
+
+func validatePasswordMethod1(password string) bool {
+	if len(password) != 6 {
 		return false
 	}
 
 	hasMatchingAdjacent := false
 
-	for i := 0; i < len(checkPassword); i++ {
-		currentNumber, err := strconv.Atoi(string(checkPassword[i]))
-		if err != nil {
+	previousNumber, _ := strconv.Atoi(string(password[0]))
+
+	for i := 1; i < len(password); i++ {
+		currentNumber, _ := strconv.Atoi(string(password[i]))
+
+		if currentNumber < previousNumber {
 			return false
 		}
 
-		for j := i + 1; j < len(checkPassword); j++ {
-			nextNumber, err := strconv.Atoi(string(checkPassword[j]))
-			if err != nil {
-				return false
-			}
-
-			if j == i+1 {
-				if currentNumber == nextNumber {
-					hasMatchingAdjacent = true
-				}
-			}
-
-			if nextNumber < currentNumber {
-				return false
-			}
+		if previousNumber == currentNumber {
+			hasMatchingAdjacent = true
 		}
 
+		previousNumber = currentNumber
+	}
+
+	return hasMatchingAdjacent
+}
+
+func validatePasswordMethod2(password string) bool {
+	if len(password) != 6 {
+		return false
+	}
+
+	hasMatchingAdjacent := false
+
+	previousNumber, _ := strconv.Atoi(string(password[0]))
+
+	for i := 1; i < len(password); i++ {
+		currentNumber, _ := strconv.Atoi(string(password[i]))
+
+		if currentNumber < previousNumber {
+			return false
+		}
+
+		if previousNumber == currentNumber && !strings.Contains(password, fmt.Sprintf("%v%v%v", currentNumber, currentNumber, currentNumber)) {
+			hasMatchingAdjacent = true
+		}
+
+		previousNumber = currentNumber
 	}
 
 	return hasMatchingAdjacent
